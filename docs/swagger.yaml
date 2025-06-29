@@ -1,0 +1,292 @@
+openapi: 3.0.0
+info:
+  title: Pet Update Service API
+  version: 1.0.0
+  description: >
+    This API provides pet profile management functionality for the Shaggy Mission pet adoption system.  
+    The service allows updating pet information including name, breed, age, health status, description, 
+    location, and images stored in a MongoDB database.  
+    **All fields in the update request are optional** - only provided fields will be updated.  
+    The service validates pet existence and returns the complete updated pet profile upon success.  
+    Pet health status is restricted to predefined values: 'Good', 'Fair', or 'Delicate'.
+
+servers:
+  - url: http://localhost:3007
+    description: Development server
+
+paths:
+  /pets/{id}:
+    put:
+      summary: Update pet profile information
+      description: >
+        Updates the profile information for a specific pet identified by their MongoDB ObjectId.  
+        All request body fields are optional - the service will only update the fields that are provided.  
+        Existing values are preserved for any fields not included in the request.  
+        
+        **Update Process:**
+        1. Pet is located by the provided ObjectId
+        2. Only the provided fields are updated using MongoDB's findByIdAndUpdate
+        3. Updated pet document is returned with timestamps
+        4. If pet is not found, a 404 error is returned
+        
+        **Field Validation:**
+        - `name`: Required field (string)
+        - `breed`: Optional string field
+        - `age`: Must be a non-negative number
+        - `healthStatus`: Must be one of: 'Good', 'Fair', 'Delicate'
+        - `description`: Optional string field
+        - `location`: Optional string field
+        - `images`: Array of image URL strings
+      tags:
+        - Pet Management
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The MongoDB ObjectId of the pet to update
+          schema:
+            type: string
+            pattern: '^[0-9a-fA-F]{24}$'
+            example: "507f1f77bcf86cd799439011"
+      requestBody:
+        required: true
+        description: Pet profile fields to update. All fields are optional for partial updates.
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  example: "Buddy"
+                  description: Pet's name
+                breed:
+                  type: string
+                  example: "Golden Retriever"
+                  description: Pet's breed
+                age:
+                  type: number
+                  minimum: 0
+                  example: 3
+                  description: Pet's age in years (must be non-negative)
+                healthStatus:
+                  type: string
+                  enum: ["Good", "Fair", "Delicate"]
+                  example: "Good"
+                  description: Pet's current health status
+                description:
+                  type: string
+                  example: "A friendly and energetic dog who loves to play fetch and go on long walks."
+                  description: Detailed description of the pet
+                location:
+                  type: string
+                  example: "New York, NY"
+                  description: Pet's current location
+                images:
+                  type: array
+                  items:
+                    type: string
+                    format: uri
+                  example: ["https://example.com/pet1.jpg", "https://example.com/pet2.jpg"]
+                  description: Array of image URLs for the pet
+            examples:
+              complete_update:
+                summary: Update all pet fields
+                value:
+                  name: "Max"
+                  breed: "Labrador Mix"
+                  age: 2
+                  healthStatus: "Good"
+                  description: "A playful and loving dog looking for a forever home. Great with kids and other pets."
+                  location: "San Francisco, CA"
+                  images: ["https://example.com/max1.jpg", "https://example.com/max2.jpg"]
+              partial_update:
+                summary: Update only basic information
+                value:
+                  name: "Luna"
+                  age: 1
+                  healthStatus: "Fair"
+              health_status_update:
+                summary: Update health status only
+                value:
+                  healthStatus: "Delicate"
+                  description: "Currently recovering from surgery, needs special care."
+              location_update:
+                summary: Update location and images
+                value:
+                  location: "Los Angeles, CA"
+                  images: ["https://example.com/newlocation1.jpg"]
+      responses:
+        '200':
+          description: Pet profile updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  _id:
+                    type: string
+                    example: "507f1f77bcf86cd799439011"
+                    description: Pet's unique MongoDB ObjectId
+                  name:
+                    type: string
+                    example: "Buddy"
+                    description: Pet's name
+                  breed:
+                    type: string
+                    example: "Golden Retriever"
+                    description: Pet's breed
+                  age:
+                    type: number
+                    example: 3
+                    description: Pet's age in years
+                  healthStatus:
+                    type: string
+                    enum: ["Good", "Fair", "Delicate"]
+                    example: "Good"
+                    description: Pet's health status
+                  description:
+                    type: string
+                    example: "A friendly and energetic dog"
+                    description: Pet's description
+                  location:
+                    type: string
+                    example: "New York, NY"
+                    description: Pet's location
+                  images:
+                    type: array
+                    items:
+                      type: string
+                    example: ["https://example.com/pet1.jpg"]
+                    description: Array of pet image URLs
+                  createdAt:
+                    type: string
+                    format: date-time
+                    example: "2024-01-15T10:30:00.000Z"
+                    description: Timestamp when pet was created
+                  updatedAt:
+                    type: string
+                    format: date-time
+                    example: "2024-01-20T14:45:00.000Z"
+                    description: Timestamp when pet was last updated
+                  __v:
+                    type: number
+                    example: 0
+                    description: MongoDB version key
+              examples:
+                updated_pet:
+                  summary: Successfully updated pet
+                  value:
+                    _id: "507f1f77bcf86cd799439011"
+                    name: "Charlie"
+                    breed: "Beagle"
+                    age: 4
+                    healthStatus: "Good"
+                    description: "A sweet and gentle dog perfect for families"
+                    location: "Chicago, IL"
+                    images: ["https://example.com/charlie1.jpg", "https://example.com/charlie2.jpg"]
+                    createdAt: "2024-01-10T08:00:00.000Z"
+                    updatedAt: "2024-01-20T16:30:00.000Z"
+                    __v: 0
+        '404':
+          description: Not Found – Pet with specified ID does not exist
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Pet not found"
+              examples:
+                pet_not_found:
+                  summary: Pet ID not found in database
+                  value:
+                    message: "Pet not found"
+        '500':
+          description: Internal Server Error – Database or server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Internal server error"
+              examples:
+                server_error:
+                  summary: Database connection or processing error
+                  value:
+                    message: "Internal server error"
+
+components:
+  schemas:
+    UpdatePetRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          description: Pet's name
+        breed:
+          type: string
+          description: Pet's breed
+        age:
+          type: number
+          minimum: 0
+          description: Pet's age in years
+        healthStatus:
+          type: string
+          enum: ["Good", "Fair", "Delicate"]
+          description: Pet's health status
+        description:
+          type: string
+          description: Pet's description
+        location:
+          type: string
+          description: Pet's current location
+        images:
+          type: array
+          items:
+            type: string
+            format: uri
+          description: Array of pet image URLs
+      description: All fields are optional for partial updates
+
+    PetResponse:
+      type: object
+      properties:
+        _id:
+          type: string
+          description: Pet's unique MongoDB ObjectId
+        name:
+          type: string
+          description: Pet's name
+        breed:
+          type: string
+          description: Pet's breed
+        age:
+          type: number
+          description: Pet's age in years
+        healthStatus:
+          type: string
+          enum: ["Good", "Fair", "Delicate"]
+          description: Pet's health status
+        description:
+          type: string
+          description: Pet's description
+        location:
+          type: string
+          description: Pet's location
+        images:
+          type: array
+          items:
+            type: string
+          description: Array of pet image URLs
+        createdAt:
+          type: string
+          format: date-time
+          description: Creation timestamp
+        updatedAt:
+          type: string
+          format: date-time
+          description: Last update timestamp
