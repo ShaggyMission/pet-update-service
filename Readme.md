@@ -104,48 +104,6 @@ The service uses a comprehensive Mongoose schema that includes required name val
 ### Partial Update Strategy
 Utilizes MongoDB's `findByIdAndUpdate` method with the `new: true` option to return the updated document, ensuring that only specified fields are modified while preserving existing data and maintaining data integrity through Mongoose validation.
 
-## 🚀 Getting Started
-
-### Prerequisites
-- Node.js (v14 or higher)
-- MongoDB Atlas account or local MongoDB instance
-- Valid MongoDB connection string
-
-### Installation
-```bash
-# Clone the repository
-git clone <repository-url>
-
-# Install dependencies
-npm install
-
-# Configure MongoDB connection
-# Edit config/db.js with your MongoDB URI
-
-# Start the service
-npm start
-```
-
-### Environment Setup
-The service connects to MongoDB Atlas using the configured URI. Update the connection string in `config/db.js`:
-
-```javascript
-const uri = 'mongodb+srv://username:password@cluster.mongodb.net/database?options';
-```
-
-### Running the Service
-```bash
-# Development mode
-npm run dev
-
-# Production mode
-npm start
-```
-
-The service will be available at:
-- **API Base URL**: `http://localhost:3007/pets`
-- **Documentation**: `http://localhost:3007/putPets-docs`
-
 ## 🌐 Service Integration
 
 This microservice integrates seamlessly with other Shaggy Mission platform components, working alongside the Pet Registration Service for initial pet creation, supporting the Pet Search Service with updated information, enabling rescue coordinators to track pet status changes, and providing adoption agencies with current pet profiles.
